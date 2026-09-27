@@ -1,25 +1,19 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-require('dotenv').config();
+
+const config = require('./config/env');
+const healthRoutes = require('./routes/health.routes');
 
 const app = express();
 
-const PORT = process.env.PORT || 3000;
-
-// Middleware
+// Security and request middleware
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.status(200).json({
-    status: 'UP',
-    service: 'devopshub-api',
-    timestamp: new Date().toISOString()
-  });
-});
+// Health API
+app.use('/api/health', healthRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -28,7 +22,16 @@ app.get('/', (req, res) => {
   });
 });
 
-// Start server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`DevOpsHub API running on port ${PORT}`);
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    status: 'ERROR',
+    message: 'Route not found'
+  });
+});
+
+app.listen(config.port, '0.0.0.0', () => {
+  console.log(
+    `DevOpsHub API running on port ${config.port} in ${config.nodeEnv} mode`
+  );
 });
